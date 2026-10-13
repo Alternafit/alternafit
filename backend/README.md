@@ -94,6 +94,8 @@ Abra o `.env` num editor e preencha:
 venv\Scripts\python.exe -c "from django.core.management.utils import get_random_secret_key as g; print(g())"
 ```
 
+Deixe o `DJANGO_DEBUG=True` que já vem no modelo: ele liga o modo de desenvolvimento (mensagens de erro detalhadas e o visual do Admin funcionando com o `runserver`). Sem essa linha, o Django entra em modo produção, que é o mais seguro para o servidor.
+
 ### 5. Crie as tabelas no banco
 
 ```
@@ -185,6 +187,10 @@ venv\Scripts\python.exe manage.py migrate
 
 Envie o arquivo novo da pasta `migrations/` junto com o seu commit, para o time ficar com o mesmo banco.
 
+## Publicando na internet
+
+O passo a passo para colocar o backend no PythonAnywhere e o app na Vercel está em [DEPLOY.md](DEPLOY.md).
+
 ## A API
 
 Ela só **lê** dados (ninguém consegue alterar nada por ela). Abrindo os endereços no navegador, o Django mostra uma página com o JSON formatado.
@@ -249,6 +255,12 @@ Já tem um servidor rodando na porta 8000, talvez em outro terminal. Feche o out
 
 **O app abre mas não mostra nenhum exercício**
 Confira se o Django está ligado (http://127.0.0.1:8000/api/exercicios/ abre?). Confira também se o app está mesmo em `http://localhost:5173`: o Django só aceita pedidos vindos desse endereço (configuração `CORS_ALLOWED_ORIGINS` no `settings.py`).
+
+**O Admin abre sem cores, só com texto (no seu computador)**
+Falta `DJANGO_DEBUG=True` no seu `.env`. Sem ele, o `runserver` não entrega o visual do Admin.
+
+**`Defina DJANGO_SECRET_KEY no arquivo backend/.env`**
+O `.env` não existe ou está sem a chave secreta. Veja o passo 4 do guia.
 
 **`A planilha não tem a aba "..."`**
 A planilha está num formato antigo. O importador só aceita o formato da versão 2.2 em diante.

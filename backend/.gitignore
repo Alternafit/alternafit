@@ -8,5 +8,8 @@ __pycache__/
 # Banco SQLite padrão do Django (não usamos, usamos MySQL)
 db.sqlite3
 
+# Arquivos gerados pelo "collectstatic" no servidor
+staticfiles/
+
 # Credenciais e configurações locais (nunca subir senhas pro GitHub)
 .env

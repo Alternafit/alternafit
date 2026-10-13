@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,16 +23,39 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+def env_bool(name, default=False):
+    """Lê uma variável do .env como verdadeiro/falso (aceita True, 1, sim...)."""
+    return os.getenv(name, str(default)).strip().lower() in ('true', '1', 'yes', 'sim')
 
-# SECURITY WARNING: keep the secret key used in production secret!
+
+def env_list(name, default=''):
+    """Lê uma variável do .env com vários valores separados por vírgula."""
+    return [item.strip() for item in os.getenv(name, default).split(',') if item.strip()]
+
+
+# Checklist de produção do Django: https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('Defina DJANGO_SECRET_KEY no arquivo backend/.env (veja o .env.example).')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Modo de desenvolvimento: mostra erros detalhados. Por segurança, o padrão é desligado;
+# no seu computador, o .env tem DJANGO_DEBUG=True.
+DEBUG = env_bool('DJANGO_DEBUG')
 
-ALLOWED_HOSTS = []
+# Endereços pelos quais o site pode ser acessado (ex.: seuusuario.pythonanywhere.com)
+ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
+
+# Sites HTTPS de onde o Admin aceita envio de formulários (ex.: https://seuusuario.pythonanywhere.com)
+CSRF_TRUSTED_ORIGINS = env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
+
+if not DEBUG:
+    # Em produção, os cookies de login só trafegam por HTTPS
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Ligue só depois de confirmar que o site abre por HTTPS (veja backend/DEPLOY.md)
+    SECURE_SSL_REDIRECT = env_bool('DJANGO_SECURE_SSL_REDIRECT')
+    SECURE_HSTS_SECONDS = int(os.getenv('DJANGO_SECURE_HSTS_SECONDS', '0'))
 
 
 # Application definition
@@ -54,11 +78,18 @@ INSTALLED_APPS = [
 # Diz ao Django para usar o nosso modelo de usuário (users/models.py) no lugar do padrão
 AUTH_USER_MODEL = 'users.User'
 
-# Endereços do frontend que podem consultar a API pelo navegador (servidor do Vite)
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-]
+# Endereços do frontend que podem consultar a API pelo navegador.
+# Padrão: o servidor do Vite no seu computador. Em produção, o endereço do app (ex.: na Vercel).
+CORS_ALLOWED_ORIGINS = env_list('DJANGO_CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
+
+# Limite de pedidos por minuto à API para cada visitante (ex.: 120/minute). Protege o
+# servidor gratuito contra uso abusivo. Vazio = sem limite (o padrão no seu computador).
+API_THROTTLE_RATE = os.getenv('DJANGO_API_THROTTLE_RATE', '')
+if API_THROTTLE_RATE:
+    REST_FRAMEWORK = {
+        'DEFAULT_THROTTLE_CLASSES': ['rest_framework.throttling.AnonRateThrottle'],
+        'DEFAULT_THROTTLE_RATES': {'anon': API_THROTTLE_RATE},
+    }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -151,6 +182,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Pasta onde o "collectstatic" junta o visual do Admin para o servidor entregar
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Registra erros no terminal/log do servidor (sem isso, com DEBUG desligado, os erros somem)
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler'},
+        'descarte': {'class': 'logging.NullHandler'},
+    },
+    'loggers': {
+        'django': {'handlers': ['console'], 'level': 'WARNING'},
+        # Robôs da internet acessam com endereços falsos o tempo todo; não precisa lotar o log com isso
+        'django.security.DisallowedHost': {'handlers': ['descarte'], 'propagate': False},
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
