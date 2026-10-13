@@ -5,6 +5,7 @@ import FiltroChips from "./components/FiltroChips";
 import CardPrincipal from "./components/CardPrincipal";
 import CardAlternativa from "./components/CardAlternativa";
 import ModalVideo from "./components/ModalVideo";
+import AvisoBeta from "./components/AvisoBeta";
 import { cores, fonte } from "./styles/theme";
 import { FILTROS_EQUIPAMENTO } from "./data/exercicios";
 import {
@@ -176,7 +177,9 @@ export default function App() {
       {/* maxWidth reduzido de proposito: a ideia e simular um app de celular
           mesmo quando visto num navegador de PC, ja que o uso principal e mobile */}
       <main style={{ maxWidth: 480, margin: "0 auto", padding: "0 18px" }}>
-        <section style={{ textAlign: "center", padding: "48px 0 32px" }}>
+        <AvisoBeta />
+
+        <section style={{ textAlign: "center", padding: "40px 0 32px" }}>
           <h1
             style={{
               fontSize: "clamp(26px, 4.5vw, 38px)",

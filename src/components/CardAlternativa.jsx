@@ -2,6 +2,7 @@ import React from "react";
 import Badge from "./Badge";
 import { cores } from "../styles/theme";
 import { rotuloEquipamento, nomeDificuldade } from "../data/exercicios";
+import MapaMuscular from "./MapaMuscular";
 
 export default function CardAlternativa({ exercicio, favoritos, onToggleFavorito, onVerVideo }) {
   const id = exercicio.codigo || exercicio.nome;
@@ -66,6 +67,12 @@ export default function CardAlternativa({ exercicio, favoritos, onToggleFavorito
           {dificuldadeTexto}
         </span>
       </div>
+
+      <MapaMuscular
+        principais={exercicio.gruposPrincipais}
+        auxiliares={exercicio.gruposAuxiliares}
+        tamanho="compacto"
+      />
 
       <p style={{ fontSize: 13, color: cores.textoSecundario, margin: 0, lineHeight: 1.5 }}>
         {dicaTexto}

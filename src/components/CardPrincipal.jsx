@@ -1,6 +1,7 @@
 import React from "react";
 import { cores } from "../styles/theme";
 import { nomeDificuldade } from "../data/exercicios";
+import MapaMuscular from "./MapaMuscular";
 
 export default function CardPrincipal({ exercicio, totalAlternativasVisiveis, onVerVideo }) {
   return (
@@ -53,6 +54,8 @@ export default function CardPrincipal({ exercicio, totalAlternativasVisiveis, on
           </span>
         )}
       </div>
+
+      <MapaMuscular principais={exercicio.gruposPrincipais} auxiliares={exercicio.gruposAuxiliares} />
 
       {exercicio.dica && (
         <p style={{ fontSize: 13.5, color: cores.textoSecundario, margin: 0, lineHeight: 1.5 }}>

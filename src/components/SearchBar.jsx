@@ -25,7 +25,8 @@ export default function SearchBar({ valor, onChange, onSubmit }) {
           padding: "14px 18px",
           minHeight: 48,
           color: cores.texto,
-          fontSize: 15,
+          // 16px no mínimo: com menos que isso, o Safari do iPhone dá zoom ao tocar no campo
+          fontSize: 16,
           outline: "none",
         }}
       />
