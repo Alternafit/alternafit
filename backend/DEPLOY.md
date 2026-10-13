@@ -6,12 +6,64 @@ Este guia coloca o backend (Django + MySQL) no **PythonAnywhere** e o app React 
 
 Ao longo do guia, troque `seuusuario` pelo seu nome de usuário no PythonAnywhere.
 
-## Antes de começar
+## Parte 0: preparação
 
-- [ ] O repositório está numa **organização do GitHub** (ou você tem acesso de administrador). A Vercel precisa disso para publicar o app.
+### Checklist
+
 - [ ] Os testes passam no seu computador: `venv\Scripts\python.exe manage.py test`
-- [ ] Você criou uma conta gratuita no https://www.pythonanywhere.com
-- [ ] Você criou uma conta gratuita na https://vercel.com (pode entrar com a conta do GitHub)
+- [ ] Conta no PythonAnywhere criada
+- [ ] Conta na Vercel criada
+- [ ] Organização do GitHub criada e repositório transferido para ela
+- [ ] Formulário de feedback criado (Google Forms)
+
+### Conta no PythonAnywhere (backend e banco)
+
+1. Acesse https://www.pythonanywhere.com → **Pricing & signup** → **Create a Beginner account** (gratuito, sem cartão).
+2. **Escolha bem o nome de usuário**: ele vira o endereço do backend (`alternafit` vira `alternafit.pythonanywhere.com`). Se estiver ocupado, tente algo como `alternafitapp`.
+3. Confirme o e-mail.
+
+### Conta na Vercel (o app que as pessoas abrem)
+
+1. Acesse https://vercel.com/signup e escolha **Hobby** (gratuito, para projetos não comerciais, como um projeto de extensão).
+2. Entre com **Continue with GitHub**.
+
+Se a Vercel pedir plano pago para importar um repositório de organização, dá para publicar pelo terminal com a ferramenta da Vercel (`npx vercel`), sem ligar ao GitHub.
+
+### Organização no GitHub
+
+Para a Vercel conseguir publicar, o repositório precisa estar numa organização (e não na conta pessoal de alguém).
+
+1. No GitHub: sua foto → **Your organizations** → **New organization** → plano **Free**. Nome sugerido: `alternafit` (ou `alternafit-unip`). Em "This organization belongs to", marque **My personal account**.
+2. Na organização: **People** → **Invite member** → convide o Vlad (`Vlad-lll`) como **Owner**.
+3. **O Vlad** (dono do repositório atual) aceita o convite e faz: no `-alternafit`, **Settings → General → Danger Zone → Transfer ownership** → escolhe a organização. Aproveitando, ele pode renomear para `alternafit`, sem o hífen.
+4. Depois da transferência, atualize o endereço no seu computador:
+
+```
+git remote set-url origin https://github.com/NOME-DA-ORG/alternafit.git
+```
+
+Plano B, se a transferência demorar: criar um repositório novo dentro da organização e enviar para ele todo o histórico (`git push` para o endereço novo). Os commits de todos continuam com a autoria original; só o endereço antigo não redireciona sozinho.
+
+### Formulário de feedback (Google Forms)
+
+1. Acesse https://forms.google.com → **Em branco**. Título: *alternafit: feedback da versão de testes*.
+2. Perguntas sugeridas:
+
+| Pergunta | Tipo |
+|---|---|
+| Onde você usou o app? | Múltipla escolha: Academia / Casa / Outro |
+| Encontrou o exercício que procurava? | Múltipla escolha: Sim / Não / Mais ou menos |
+| Se não encontrou, qual exercício você buscou? | Resposta curta (opcional) |
+| As alternativas sugeridas fizeram sentido? | Escala de 1 a 5 |
+| Você chegou a fazer alguma alternativa no treino? | Sim / Não |
+| Algo não funcionou ou ficou confuso? | Parágrafo (opcional) |
+| Qual aparelho você usou? | Android / iPhone / Computador |
+| De 0 a 10, quanto você recomendaria o app a um amigo? | Escala de 0 a 10 |
+| Sugestões | Parágrafo (opcional) |
+
+3. Em **Configurações**, deixe **desligado** "Coletar endereços de e-mail" e "Limitar a uma resposta" (essa exige login no Google e afasta testadores). Formulário anônimo = sem dados pessoais para cuidar (LGPD).
+4. **Enviar** → ícone de link → **Encurtar URL** → copie. Esse link vai na variável `VITE_FEEDBACK_URL` da Vercel (Parte 2).
+5. Na aba **Respostas**, clique em **Vincular ao Planilhas** para as respostas caírem numa planilha.
 
 ## Parte 1: o backend no PythonAnywhere
 
@@ -119,7 +171,9 @@ Se aparecer "Something went wrong", veja o **Error log** na aba Web: o erro de v
 
 1. Na Vercel, clique em **Add New → Project** e importe o repositório do GitHub.
 2. A Vercel reconhece o Vite sozinha. Confira: build command `npm run build`, output `dist`, pasta raiz do repositório.
-3. Em **Environment Variables**, crie `VITE_API_URL` com o valor `https://seuusuario.pythonanywhere.com/api`
+3. Em **Environment Variables**, crie:
+   - `VITE_API_URL` com o valor `https://seuusuario.pythonanywhere.com/api`
+   - `VITE_FEEDBACK_URL` com o link do formulário de feedback (ex.: Google Forms). Sem ela, o botão "Dar feedback" não aparece no app.
 4. Clique em **Deploy** e anote o endereço que ela der (algo como `https://alternafit.vercel.app`).
 5. Volte ao console do PythonAnywhere, abra o `.env` (`nano .env`), coloque esse endereço em `DJANGO_CORS_ALLOWED_ORIGINS` e clique em **Reload** na aba Web.
 
