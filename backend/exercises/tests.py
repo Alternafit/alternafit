@@ -113,7 +113,14 @@ class ExerciseApiTests(APITestCase):
             'dica': '',
             'videoUrl': '',
             'observacao': 'Mesmo padrão de movimento',
+            'gruposPrincipais': ['Peitoral'],
+            'gruposAuxiliares': [],
         }])
+
+    def test_responses_are_compressed_for_mobile_data(self):
+        response = self.client.get('/api/exercicios/', HTTP_ACCEPT_ENCODING='gzip')
+
+        self.assertEqual(response['Content-Encoding'], 'gzip')
 
     def test_search_returns_exact_name_first(self):
         data = self.client.get('/api/exercicios/', {'busca': 'barra fixa'}).json()

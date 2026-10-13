@@ -13,6 +13,11 @@ def difficulty_level(exercise):
     return exercise.difficulty.level if exercise.difficulty else None
 
 
+def groups_with_role(exercise, role):
+    """Nomes dos grupos musculares do exercício com o papel pedido (principal ou auxiliar)."""
+    return [link.muscular_group.name for link in exercise.muscular_group_links.all() if link.role == role]
+
+
 class MuscularGroupSerializer(serializers.ModelSerializer):
     codigo = serializers.CharField(source='code')
     nome = serializers.CharField(source='name')
@@ -54,15 +59,24 @@ class AlternativeSerializer(serializers.ModelSerializer):
     dica = serializers.CharField(source='alternative.tip')
     videoUrl = serializers.CharField(source='alternative.video_url')
     observacao = serializers.CharField(source='note')
+    gruposPrincipais = serializers.SerializerMethodField()
+    gruposAuxiliares = serializers.SerializerMethodField()
 
     class Meta:
         model = ExerciseAlternative
         fields = [
             'codigo', 'nome', 'ordemPrioridade', 'semEquipamento', 'dificuldade', 'dica', 'videoUrl', 'observacao',
+            'gruposPrincipais', 'gruposAuxiliares',
         ]
 
     def get_dificuldade(self, link):
         return difficulty_level(link.alternative)
+
+    def get_gruposPrincipais(self, link):
+        return groups_with_role(link.alternative, ExerciseMuscularGroup.Role.PRIMARY)
+
+    def get_gruposAuxiliares(self, link):
+        return groups_with_role(link.alternative, ExerciseMuscularGroup.Role.SECONDARY)
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
@@ -105,13 +119,10 @@ class ExerciseSerializer(serializers.ModelSerializer):
         return [link.muscular_group.name for link in exercise.muscular_group_links.all()]
 
     def get_gruposPrincipais(self, exercise):
-        return self._groups_with_role(exercise, ExerciseMuscularGroup.Role.PRIMARY)
+        return groups_with_role(exercise, ExerciseMuscularGroup.Role.PRIMARY)
 
     def get_gruposAuxiliares(self, exercise):
-        return self._groups_with_role(exercise, ExerciseMuscularGroup.Role.SECONDARY)
+        return groups_with_role(exercise, ExerciseMuscularGroup.Role.SECONDARY)
 
     def get_precisaEquipamento(self, exercise):
         return not exercise.is_equipment_free
-
-    def _groups_with_role(self, exercise, role):
-        return [link.muscular_group.name for link in exercise.muscular_group_links.all() if link.role == role]

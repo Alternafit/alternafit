@@ -93,6 +93,8 @@ if API_THROTTLE_RATE:
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Comprime as respostas (até 8x menores), o que economiza o plano de dados de quem usa pelo celular
+    'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     # O CORS precisa vir antes do CommonMiddleware para funcionar
     'corsheaders.middleware.CorsMiddleware',

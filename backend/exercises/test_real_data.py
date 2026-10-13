@@ -30,6 +30,7 @@ EXERCISE_FIELDS = {
 }
 ALTERNATIVE_FIELDS = {
     'codigo', 'nome', 'ordemPrioridade', 'semEquipamento', 'dificuldade', 'dica', 'videoUrl', 'observacao',
+    'gruposPrincipais', 'gruposAuxiliares',
 }
 
 
@@ -73,7 +74,11 @@ class RealDataTests(APITestCase):
             for alternative in e['alternativas']:
                 with self.subTest(exercicio=e['nome'], alternativa=alternative['nome']):
                     self.assertIn(alternative['codigo'], self.by_code)
-                    self.assertEqual(self.by_code[alternative['codigo']]['nome'], alternative['nome'])
+                    original = self.by_code[alternative['codigo']]
+                    self.assertEqual(original['nome'], alternative['nome'])
+                    # O mapa de músculos da alternativa usa os mesmos grupos do exercício dela
+                    self.assertEqual(alternative['gruposPrincipais'], original['gruposPrincipais'])
+                    self.assertEqual(alternative['gruposAuxiliares'], original['gruposAuxiliares'])
 
     def test_app_rules(self):
         for e in self.exercises:

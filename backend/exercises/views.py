@@ -30,7 +30,13 @@ class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
             Prefetch(
                 'alternative_links',
                 queryset=ExerciseAlternative.objects.select_related('alternative__difficulty')
-                .prefetch_related('alternative__equipment')
+                .prefetch_related(
+                    'alternative__equipment',
+                    Prefetch(
+                        'alternative__muscular_group_links',
+                        queryset=ExerciseMuscularGroup.objects.select_related('muscular_group'),
+                    ),
+                )
                 .order_by('order'),
             ),
         )
