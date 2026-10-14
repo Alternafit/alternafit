@@ -29,8 +29,8 @@ EXERCISE_FIELDS = {
     'dica', 'videoUrl', 'apelidos', 'passos', 'fontes', 'alternativas',
 }
 ALTERNATIVE_FIELDS = {
-    'codigo', 'nome', 'ordemPrioridade', 'semEquipamento', 'dificuldade', 'dica', 'videoUrl', 'observacao',
-    'gruposPrincipais', 'gruposAuxiliares',
+    'codigo', 'nome', 'ordemPrioridade', 'semEquipamento', 'equipamentos', 'dificuldade', 'dica', 'videoUrl',
+    'observacao', 'gruposPrincipais', 'gruposAuxiliares',
 }
 
 
@@ -79,6 +79,9 @@ class RealDataTests(APITestCase):
                     # O mapa de músculos da alternativa usa os mesmos grupos do exercício dela
                     self.assertEqual(alternative['gruposPrincipais'], original['gruposPrincipais'])
                     self.assertEqual(alternative['gruposAuxiliares'], original['gruposAuxiliares'])
+                    # O card da alternativa mostra os mesmos equipamentos do exercício dela
+                    self.assertEqual(alternative['equipamentos'], original['equipamentos'])
+                    self.assertEqual(alternative['semEquipamento'], alternative['equipamentos'] == [])
 
     def test_app_rules(self):
         for e in self.exercises:

@@ -55,6 +55,9 @@ class AlternativeSerializer(serializers.ModelSerializer):
     nome = serializers.CharField(source='alternative.name')
     ordemPrioridade = serializers.IntegerField(source='order')
     semEquipamento = serializers.BooleanField(source='alternative.is_equipment_free')
+    equipamentos = serializers.SlugRelatedField(
+        source='alternative.equipment', slug_field='name', many=True, read_only=True
+    )
     dificuldade = serializers.SerializerMethodField()
     dica = serializers.CharField(source='alternative.tip')
     videoUrl = serializers.CharField(source='alternative.video_url')
@@ -65,8 +68,8 @@ class AlternativeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExerciseAlternative
         fields = [
-            'codigo', 'nome', 'ordemPrioridade', 'semEquipamento', 'dificuldade', 'dica', 'videoUrl', 'observacao',
-            'gruposPrincipais', 'gruposAuxiliares',
+            'codigo', 'nome', 'ordemPrioridade', 'semEquipamento', 'equipamentos', 'dificuldade', 'dica', 'videoUrl',
+            'observacao', 'gruposPrincipais', 'gruposAuxiliares',
         ]
 
     def get_dificuldade(self, link):

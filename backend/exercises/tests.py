@@ -109,6 +109,7 @@ class ExerciseApiTests(APITestCase):
             'nome': 'Flexão de braço',
             'ordemPrioridade': 1,
             'semEquipamento': True,
+            'equipamentos': [],
             'dificuldade': None,
             'dica': '',
             'videoUrl': '',

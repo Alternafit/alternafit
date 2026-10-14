@@ -68,6 +68,14 @@ export default function CardAlternativa({ exercicio, favoritos, onToggleFavorito
         </span>
       </div>
 
+      {/* Para alternativas com equipamento, mostra quais são necessários */}
+      {exercicio.equipamentos?.length > 0 && (
+        <div style={{ fontSize: 12, fontWeight: 700, color: cores.textoSecundario, lineHeight: 1.5, marginTop: -4 }}>
+          Equipamento:{" "}
+          <span style={{ color: cores.texto }}>{exercicio.equipamentos.join(", ")}</span>
+        </div>
+      )}
+
       <MapaMuscular
         principais={exercicio.gruposPrincipais}
         auxiliares={exercicio.gruposAuxiliares}
