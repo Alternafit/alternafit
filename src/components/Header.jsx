@@ -1,7 +1,7 @@
 import React from "react";
 import { cores } from "../styles/theme";
 
-export default function Header({ totalFavoritos }) {
+export default function Header({ totalFavoritos, favoritosAbertos, onFavoritos, onInicio }) {
   return (
     <header
       style={{
@@ -14,7 +14,22 @@ export default function Header({ totalFavoritos }) {
         margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      {/* O logo leva de volta para a tela inicial */}
+      <button
+        onClick={onInicio}
+        aria-label="Ir para a tela inicial"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          background: "transparent",
+          border: "none",
+          padding: 0,
+          minHeight: 44,
+          color: cores.texto,
+          cursor: "pointer",
+        }}
+      >
         <div
           style={{
             width: 34,
@@ -46,10 +61,32 @@ export default function Header({ totalFavoritos }) {
         <span style={{ fontWeight: 800, fontSize: 17 }}>
           alterna<span style={{ color: cores.orange }}>fit</span>
         </span>
-      </div>
-      <div style={{ fontSize: 12.5, color: cores.textoSecundario, fontWeight: 600 }}>
+      </button>
+
+      {/* Mostra só os exercícios favoritados (tocar de novo volta para a tela inicial) */}
+      <button
+        onClick={onFavoritos}
+        aria-pressed={favoritosAbertos}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          background: favoritosAbertos ? cores.orangeTint : "transparent",
+          border: `1px solid ${favoritosAbertos ? cores.orange : cores.borda}`,
+          borderRadius: 999,
+          padding: "8px 14px",
+          minHeight: 40,
+          color: favoritosAbertos ? cores.orange : cores.textoSecundario,
+          fontSize: 12.5,
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        <span aria-hidden="true" style={{ color: cores.orange, fontSize: 15, lineHeight: 1 }}>
+          ♥
+        </span>
         {totalFavoritos} favorito{totalFavoritos !== 1 ? "s" : ""}
-      </div>
+      </button>
     </header>
   );
 }

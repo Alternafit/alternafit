@@ -5,7 +5,7 @@ import { cores } from "../styles/theme";
 // de ambiente VITE_FEEDBACK_URL. Sem ela, o link simplesmente não aparece.
 const LINK_FEEDBACK = import.meta.env.VITE_FEEDBACK_URL ?? "";
 
-/** Aviso da versão de testes: o conteúdo ainda está em revisão por um profissional. */
+/** Aviso da versão de testes, com o link para a pessoa mandar feedback. */
 export default function AvisoBeta() {
   return (
     <div
@@ -21,16 +21,17 @@ export default function AvisoBeta() {
         color: cores.texto,
       }}
     >
-      <strong style={{ color: cores.orange }}>Versão de testes.</strong> As informações
-      estão sendo revisadas por um profissional de Educação Física. Em caso de dor ou
-      dúvida, procure um profissional.
+      <strong style={{ color: cores.orange }}>Versão de testes.</strong> Algumas informações
+      podem estar erradas ou inconsistentes.
+      {LINK_FEEDBACK && " Se notar qualquer erro ou problema, nos dê seu feedback pelo link abaixo."}{" "}
+      Em caso de dor ou dúvida, procure um profissional.
       {LINK_FEEDBACK && (
         <a
           href={LINK_FEEDBACK}
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            display: "inline-block",
+            display: "block",
             marginTop: 8,
             color: cores.orange,
             fontWeight: 800,
@@ -38,7 +39,7 @@ export default function AvisoBeta() {
             padding: "4px 0",
           }}
         >
-          Dar feedback sobre o app →
+          Dê feedback sobre o app →
         </a>
       )}
     </div>
