@@ -44,11 +44,11 @@ Os comandos abaixo são para o **PowerShell do Windows**. No Mac ou no Linux, tr
 ### 1. Baixe o projeto
 
 ```
-git clone https://github.com/Vlad-lll/-alternafit.git alternafit
+git clone https://github.com/Alternafit/alternafit.git
 cd alternafit
 ```
 
-O `alternafit` no fim do primeiro comando dá um nome normal para a pasta (o repositório começa com um hífen, o que confunde alguns comandos).
+Se você baixou o projeto antes da mudança para a organização (endereço `Vlad-lll/-alternafit`), aponte a pasta para o endereço novo com `git remote set-url origin https://github.com/Alternafit/alternafit.git`.
 
 ### 2. Crie o banco de dados
 

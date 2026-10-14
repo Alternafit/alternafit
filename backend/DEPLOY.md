@@ -29,20 +29,18 @@ Ao longo do guia, troque `seuusuario` pelo seu nome de usuário no PythonAnywher
 
 Se a Vercel pedir plano pago para importar um repositório de organização, dá para publicar pelo terminal com a ferramenta da Vercel (`npx vercel`), sem ligar ao GitHub.
 
-### Organização no GitHub
+### Organização no GitHub ✅
 
-Para a Vercel conseguir publicar, o repositório precisa estar numa organização (e não na conta pessoal de alguém).
+O repositório oficial agora é **https://github.com/Alternafit/alternafit**, na organização Alternafit. Ele foi criado com todo o histórico do repositório antigo (`Vlad-lll/-alternafit`), mantendo a autoria de cada commit.
 
-1. No GitHub: sua foto → **Your organizations** → **New organization** → plano **Free**. Nome sugerido: `alternafit` (ou `alternafit-unip`). Em "This organization belongs to", marque **My personal account**.
-2. Na organização: **People** → **Invite member** → convide o Vlad (`Vlad-lll`) como **Owner**.
-3. **O Vlad** (dono do repositório atual) aceita o convite e faz: no `-alternafit`, **Settings → General → Danger Zone → Transfer ownership** → escolhe a organização. Aproveitando, ele pode renomear para `alternafit`, sem o hífen.
-4. Depois da transferência, atualize o endereço no seu computador:
+Quem já tinha o projeto baixado deve apontar a pasta para o endereço novo:
 
 ```
-git remote set-url origin https://github.com/NOME-DA-ORG/alternafit.git
+git remote set-url origin https://github.com/Alternafit/alternafit.git
+git pull
 ```
 
-Plano B, se a transferência demorar: criar um repositório novo dentro da organização e enviar para ele todo o histórico (`git push` para o endereço novo). Os commits de todos continuam com a autoria original; só o endereço antigo não redireciona sozinho.
+O repositório antigo deve ser arquivado (Settings → Archive this repository), para ninguém continuar mexendo nele por engano.
 
 ### Formulário de feedback (Google Forms)
 
@@ -86,13 +84,13 @@ Isso garante que acentos e emojis sejam salvos corretamente (é o mesmo `utf8mb4
 Abra a aba **Consoles** e inicie um console **Bash**. Nele:
 
 ```bash
-git clone https://github.com/ORGANIZACAO/alternafit.git alternafit
+git clone https://github.com/Alternafit/alternafit.git alternafit
 cd alternafit/backend
 python3.11 -m venv venv
 venv/bin/python -m pip install -r requirements.txt
 ```
 
-Troque `ORGANIZACAO/alternafit` pelo endereço real do repositório. Se `python3.11` não existir, use outra versão a partir da 3.10 (por exemplo `python3.12`).
+Se `python3.11` não existir, use outra versão a partir da 3.10 (por exemplo `python3.12`).
 
 ### 3. Crie o `.env` do servidor
 
