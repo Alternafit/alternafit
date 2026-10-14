@@ -128,7 +128,11 @@ WSGI_APPLICATION = 'alternafit_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
+# Qual banco usar: "mysql" (padrão, no computador de vocês) ou "sqlite" (um arquivo,
+# usado no servidor gratuito do PythonAnywhere, que não oferece MySQL).
+DB_ENGINE = os.getenv('DB_ENGINE', 'mysql').strip().lower()
+
+MYSQL_DATABASE = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.getenv('DB_NAME'),
@@ -147,6 +151,20 @@ DATABASES = {
         },
     }
 }
+
+SQLITE_DATABASE = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.getenv('DB_SQLITE_PATH') or BASE_DIR / 'db.sqlite3',
+    }
+}
+
+if DB_ENGINE == 'mysql':
+    DATABASES = MYSQL_DATABASE
+elif DB_ENGINE == 'sqlite':
+    DATABASES = SQLITE_DATABASE
+else:
+    raise ImproperlyConfigured(f'DB_ENGINE inválido: "{DB_ENGINE}". Use "mysql" ou "sqlite".')
 
 
 # Password validation

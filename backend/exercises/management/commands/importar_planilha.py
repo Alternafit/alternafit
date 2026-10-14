@@ -17,8 +17,6 @@ Uso (dentro da pasta backend/):
 - Usuários e logins do Admin não são afetados.
 """
 
-import re
-import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 from zipfile import BadZipFile
@@ -30,6 +28,7 @@ from django.db import transaction
 from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 
+from exercises.text import fold
 from exercises.models import (
     Difficulty,
     Equipment,
@@ -94,11 +93,6 @@ def text(value):
     return str(value).strip()
 
 
-def fold(value):
-    """Minúsculas, sem acentos e sem espaços repetidos, para comparar textos."""
-    normalized = unicodedata.normalize('NFKD', text(value).lower())
-    normalized = ''.join(ch for ch in normalized if not unicodedata.combining(ch))
-    return re.sub(r'\s+', ' ', normalized)
 
 
 def to_int(value):

@@ -1,6 +1,8 @@
 # Publicando o alternafit na internet
 
-Este guia coloca o backend (Django + MySQL) no **PythonAnywhere** e o app React na **Vercel**, as duas opções gratuitas que escolhemos. A ideia é seguir os passos na ordem, com calma.
+Este guia coloca o backend (Django) no **PythonAnywhere** e o app React na **Vercel**, as duas opções gratuitas que escolhemos. A ideia é seguir os passos na ordem, com calma.
+
+No nosso caso, o usuário do PythonAnywhere é `alternafit`: onde o guia diz `seuusuario`, use `alternafit` (o backend fica em https://alternafit.pythonanywhere.com).
 
 > Os planos gratuitos e as telas desses serviços mudam de vez em quando. Se algum botão estiver com outro nome, procure algo parecido. O objetivo de cada passo está explicado.
 
@@ -65,21 +67,13 @@ O repositório antigo deve ser arquivado (Settings → Archive this repository),
 
 ## Parte 1: o backend no PythonAnywhere
 
-### 1. Crie o banco de dados
+### Sobre o banco de dados no servidor
 
-1. No painel do PythonAnywhere, abra a aba **Databases**.
-2. Em "MySQL password", crie uma senha para o banco (guarde-a; é diferente da senha da conta).
-3. Em "Create a database", crie um banco chamado `alternafit`. O nome completo dele será `seuusuario$alternafit`.
-4. Anote o endereço que aparece em "Database host address" (algo como `seuusuario.mysql.pythonanywhere-services.com`).
-5. Clique no nome do banco para abrir um console MySQL e rode:
+O plano gratuito do PythonAnywhere **não inclui MySQL**. Por isso, no servidor usamos o **SQLite**: um banco de dados que fica num arquivo (`backend/db.sqlite3`), criado pelo próprio Django no comando `migrate`. Não há nada para criar no painel.
 
-```sql
-ALTER DATABASE `seuusuario$alternafit` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+O código funciona igual nos dois bancos: a busca ignora acentos e maiúsculas no próprio Python, e a bateria de testes roda nos dois. Para rodar os testes no SQLite pelo PowerShell: `$env:DB_ENGINE='sqlite'; venv\Scripts\python.exe manage.py test` (feche o terminal depois, para voltar ao MySQL). Nos computadores do time, o MySQL continua sendo o banco principal.
 
-Isso garante que acentos e emojis sejam salvos corretamente (é o mesmo `utf8mb4` que usamos no computador).
-
-### 2. Baixe o código
+### 1. Baixe o código
 
 Abra a aba **Consoles** e inicie um console **Bash**. Nele:
 
@@ -92,7 +86,14 @@ venv/bin/python -m pip install -r requirements.txt
 
 Se `python3.11` não existir, use outra versão a partir da 3.10 (por exemplo `python3.12`).
 
-### 3. Crie o `.env` do servidor
+Se a instalação falhar no `mysqlclient` (a peça que conversa com o MySQL, que o servidor não usa), instale todo o resto sem ela:
+
+```bash
+grep -v mysqlclient requirements.txt > /tmp/requisitos-servidor.txt
+venv/bin/python -m pip install -r /tmp/requisitos-servidor.txt
+```
+
+### 2. Crie o `.env` do servidor
 
 Ainda no console, gere uma chave secreta **nova** (nunca reaproveite a do seu computador):
 
@@ -103,11 +104,7 @@ venv/bin/python -c "from django.core.management.utils import get_random_secret_k
 Depois crie o arquivo com `nano .env` e cole o conteúdo abaixo, trocando os valores:
 
 ```
-DB_NAME='seuusuario$alternafit'
-DB_USER=seuusuario
-DB_PASSWORD=a_senha_do_mysql_do_passo_1
-DB_HOST=seuusuario.mysql.pythonanywhere-services.com
-DB_PORT=3306
+DB_ENGINE=sqlite
 
 DJANGO_SECRET_KEY='cole_a_chave_gerada_aqui'
 DJANGO_DEBUG=False
@@ -117,11 +114,10 @@ DJANGO_CORS_ALLOWED_ORIGINS=https://endereco-do-app.vercel.app
 DJANGO_API_THROTTLE_RATE=120/minute
 ```
 
-- O `DB_NAME` vai **entre aspas simples** por causa do `$`.
 - O `DJANGO_CORS_ALLOWED_ORIGINS` você só vai saber na Parte 2. Por enquanto, deixe como está e volte aqui depois.
 - Para salvar no `nano`: `Ctrl+O`, `Enter`, `Ctrl+X`.
 
-### 4. Prepare o banco e os dados
+### 3. Prepare o banco e os dados
 
 ```bash
 venv/bin/python manage.py migrate
@@ -133,10 +129,10 @@ venv/bin/python manage.py collectstatic --noinput
 
 O último comando junta os arquivos visuais do Admin (cores, fontes) na pasta `staticfiles/`, de onde o servidor vai entregá-los.
 
-### 5. Configure o site
+### 4. Configure o site
 
 1. Abra a aba **Web** e clique em **Add a new web app**.
-2. Escolha **Manual configuration** (não escolha a opção "Django" pronta) e a mesma versão de Python do passo 2.
+2. Escolha **Manual configuration** (não escolha a opção "Django" pronta) e a mesma versão de Python do passo 1.
 3. Na seção **Virtualenv**, informe: `/home/seuusuario/alternafit/backend/venv`
 4. Na seção **Code**, clique no link do **WSGI configuration file**, apague tudo e cole:
 
@@ -158,7 +154,7 @@ application = get_wsgi_application()
 6. Na seção **Security**, ligue **Force HTTPS**.
 7. Clique no botão verde **Reload**.
 
-### 6. Confira
+### 5. Confira
 
 - https://seuusuario.pythonanywhere.com/api/exercicios/ mostra os exercícios?
 - https://seuusuario.pythonanywhere.com/admin/ abre com o visual normal e aceita o seu login?
@@ -198,8 +194,10 @@ E clique em **Reload** na aba Web.
 **Backup do banco:**
 
 ```bash
-mysqldump -u seuusuario -h seuusuario.mysql.pythonanywhere-services.com --no-tablespaces 'seuusuario$alternafit' > ~/backup-$(date +%F).sql
+cp ~/alternafit/backend/db.sqlite3 ~/backup-$(date +%F).sqlite3
 ```
+
+Como o banco é um arquivo, o backup é só uma cópia dele. Para voltar a um backup, copie o arquivo de volta para `~/alternafit/backend/db.sqlite3` e clique em **Reload** na aba Web.
 
 **Manter o site ligado:** no plano gratuito, o PythonAnywhere desliga o site depois de alguns meses sem renovação. Entre de vez em quando na aba Web e clique em **Run until 3 months from today**.
 

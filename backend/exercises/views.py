@@ -1,8 +1,36 @@
-from django.db.models import Case, Exists, IntegerField, OuterRef, Prefetch, Q, Value, When
+from django.db.models import Prefetch
 from rest_framework import viewsets
+from rest_framework.response import Response
 
-from .models import Exercise, ExerciseAlias, ExerciseAlternative, ExerciseMuscularGroup, MuscularGroup
+from .models import Exercise, ExerciseAlternative, ExerciseMuscularGroup, MuscularGroup
 from .serializers import ExerciseSerializer, MuscularGroupSerializer
+from .text import fold
+
+
+def search_relevance(exercise, term):
+    """
+    Quão bem o exercício combina com a busca (menor = melhor), ou None se não combina.
+    Ordem: nome exato, depois nome em inglês ou apelido exato, depois "começa com", depois "contém".
+    """
+    name = fold(exercise.name)
+    others = [fold(exercise.name_en)] + [fold(alias.alias) for alias in exercise.aliases.all()]
+    if name == term:
+        return 0
+    if term in others:
+        return 1
+    if name.startswith(term):
+        return 2
+    if term in name or any(term in other for other in others):
+        return 3
+    return None
+
+
+def group_role(exercise, group):
+    """Papel do grupo muscular no exercício ("primary"/"secondary"), ou None se o exercício não trabalha esse grupo."""
+    for link in exercise.muscular_group_links.all():
+        if fold(link.muscular_group.name) == group:
+            return link.role
+    return None
 
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -13,12 +41,16 @@ class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
     GET /api/exercicios/?busca=supino     nome, nome em inglês ou apelido contém "supino" (nome exato primeiro)
     GET /api/exercicios/?grupo=Glúteos    exercícios que trabalham o grupo (foco principal primeiro)
     GET /api/exercicios/<codigo>/         um exercício específico
+
+    A busca e o filtro ignoram acentos e maiúsculas ("flexao" encontra "Flexão"). Eles são
+    feitos aqui no Python, e não no banco, para funcionar igual no MySQL e no SQLite.
+    O catálogo é pequeno (algumas centenas de exercícios), então isso é rápido.
     """
 
     serializer_class = ExerciseSerializer
 
     def get_queryset(self):
-        queryset = Exercise.objects.select_related('difficulty', 'movement_pattern').prefetch_related(
+        return Exercise.objects.select_related('difficulty', 'movement_pattern').prefetch_related(
             Prefetch(
                 'muscular_group_links',
                 queryset=ExerciseMuscularGroup.objects.select_related('muscular_group'),
@@ -41,35 +73,52 @@ class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
             ),
         )
 
-        search = self.request.query_params.get('busca', '').strip()
+    def list(self, request, *args, **kwargs):
+        search = fold(request.query_params.get('busca', ''))
+        group = fold(request.query_params.get('grupo', ''))
+        if not search and not group:
+            exercises = sorted(self.get_queryset(), key=lambda e: fold(e.name))
+            return Response(self.get_serializer(exercises, many=True).data)
+
+        # Etapa 1: carrega só o necessário para comparar (nomes, apelidos e grupos) e escolhe os exercícios
+        candidates = sorted(
+            Exercise.objects.only('id', 'name', 'name_en').prefetch_related(
+                'aliases',
+                Prefetch(
+                    'muscular_group_links',
+                    queryset=ExerciseMuscularGroup.objects.select_related('muscular_group'),
+                ),
+            ),
+            key=lambda e: fold(e.name),
+        )
         if search:
-            matches = Exercise.objects.filter(
-                Q(name__icontains=search) | Q(name_en__icontains=search) | Q(aliases__alias__icontains=search)
-            ).values('pk')
-            exact_alias = ExerciseAlias.objects.filter(exercise=OuterRef('pk'), alias__iexact=search)
-            # Ordena por relevância: nome exato, depois apelido/inglês exato, depois "começa com", depois "contém".
-            queryset = queryset.filter(pk__in=matches).annotate(
-                relevance=Case(
-                    When(name__iexact=search, then=Value(0)),
-                    When(Q(name_en__iexact=search) | Exists(exact_alias), then=Value(1)),
-                    When(name__istartswith=search, then=Value(2)),
-                    default=Value(3),
-                    output_field=IntegerField(),
-                )
-            ).order_by('relevance', 'name')
-
-        group = self.request.query_params.get('grupo', '').strip()
+            ranked = [(search_relevance(e, search), e) for e in candidates]
+            candidates = [e for relevance, e in sorted(
+                ((r, e) for r, e in ranked if r is not None), key=lambda pair: pair[0]
+            )]
         if group:
-            in_group = ExerciseMuscularGroup.objects.filter(exercise=OuterRef('pk'), muscular_group__name=group)
-            queryset = queryset.filter(Exists(in_group)).annotate(
-                is_primary=Exists(in_group.filter(role=ExerciseMuscularGroup.Role.PRIMARY))
-            ).order_by('-is_primary', 'name')
+            roles = [(group_role(e, group), e) for e in candidates]
+            # Quem tem o grupo como foco principal vem primeiro; dentro de cada parte, a ordem anterior é mantida
+            candidates = [e for role, e in roles if role == ExerciseMuscularGroup.Role.PRIMARY] + [
+                e for role, e in roles if role == ExerciseMuscularGroup.Role.SECONDARY
+            ]
 
-        return queryset
+        # Etapa 2: carrega os dados completos só dos exercícios escolhidos, mantendo a ordem
+        ids = [e.id for e in candidates]
+        full = {e.id: e for e in self.get_queryset().filter(id__in=ids)}
+        exercises = [full[i] for i in ids]
+        return Response(self.get_serializer(exercises, many=True).data)
 
 
 class MuscularGroupViewSet(viewsets.ReadOnlyModelViewSet):
     """Grupos musculares, usados nos chips de navegação do frontend (somente leitura)."""
 
-    queryset = MuscularGroup.objects.all()
     serializer_class = MuscularGroupSerializer
+
+    def get_queryset(self):
+        return MuscularGroup.objects.all()
+
+    def list(self, request, *args, **kwargs):
+        # Ordem alfabética ignorando acentos, igual em qualquer banco
+        groups = sorted(self.get_queryset(), key=lambda g: fold(g.name))
+        return Response(self.get_serializer(groups, many=True).data)

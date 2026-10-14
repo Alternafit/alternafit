@@ -191,6 +191,15 @@ Envie o arquivo novo da pasta `migrations/` junto com o seu commit, para o time 
 
 O passo a passo para colocar o backend no PythonAnywhere e o app na Vercel está em [DEPLOY.md](DEPLOY.md).
 
+No servidor gratuito usamos o **SQLite** (um banco em arquivo), porque o plano gratuito do PythonAnywhere não oferece MySQL. Quem escolhe o banco é a linha `DB_ENGINE` do `.env` (`mysql` ou `sqlite`). O código funciona igual nos dois; antes de enviar mudanças que mexem no banco ou na busca, rode os testes nos dois:
+
+```
+venv\Scripts\python.exe manage.py test
+$env:DB_ENGINE='sqlite'; venv\Scripts\python.exe manage.py test
+```
+
+(Depois do segundo comando, feche o terminal para voltar ao MySQL.)
+
 ## A API
 
 Ela só **lê** dados (ninguém consegue alterar nada por ela). Abrindo os endereços no navegador, o Django mostra uma página com o JSON formatado.
@@ -232,6 +241,7 @@ backend/
     ├── models.py              ← as tabelas do banco
     ├── serializers.py         ← "tradução" do banco para o JSON da API
     ├── views.py               ← a lógica de busca e filtros da API
+    ├── text.py                ← compara textos ignorando acentos e maiúsculas (usado na busca e no importador)
     ├── admin.py               ← as telas do Django Admin
     ├── tests.py               ← testes automáticos
     ├── migrations/            ← histórico de mudanças das tabelas
